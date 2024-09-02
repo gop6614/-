@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小遊戲倒數提醒</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .timer-container {
+            flex: 1;
+            text-align: center;
+            padding: 20px;
+            background-color: #e7f2f8;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-right: 20px;
+        }
+        .timer {
+            font-size: 2em;
+            color: #333;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 1.1em;
+            background-color: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+        }
+        td {
+            padding: 15px;
+            text-align: center;
+            color: #333;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr.highlight {
+            background-color: #ffcccc !important;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            width: 60%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="timer-container">
+        <h1>下一場小遊戲開始時間：</h1>
+        <div id="next-game">正在計算中...</div>
+        <div class="timer" id="countdown"></div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>時間</th>
+                    <th>遊戲名稱</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-table">
+                <!-- 遊戲時刻表 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const schedule = [
+        { time: "00:00", game: "我不是RO大盜" },
+        { time: "00:30", game: "燙手山芋" },
+        { time: "01:00", game: "RO大盜" },
+        { time: "01:30", game: "魔物大戰" },
+        { time: "02:00", game: "我不是RO大盜" },
+        { time: "02:30", game: "極速快感" },
+        { time: "03:00", game: "RO大盜" },
+        { time: "03:30", game: "炸彈波利" },
+        { time: "03:45", game: "波利賽跑" },
+        { time: "04:00", game: "我不是RO大盜" },
+        { time: "04:30", game: "燙手山芋" },
+        { time: "05:00", game: "RO大盜" },
+        { time: "05:30", game: "魔物大戰" },
+        { time: "06:00", game: "我不是RO大盜" },
+        { time: "06:30", game: "極速快感" },
+        { time: "07:00", game: "RO大盜" },
+        { time: "07:30", game: "炸彈波利" },
+        { time: "08:00", game: "我不是RO大盜" },
+        { time: "08:30", game: "燙手山芋" },
+        { time: "09:00", game: "RO大盜" },
+        { time: "09:30", game: "魔物大戰" },
+        { time: "10:00", game: "我不是RO大盜" },
+        { time: "10:30", game: "極速快感" },
+        { time: "11:00", game: "RO大盜" },
+        { time: "11:30", game: "炸彈波利" },
+        { time: "12:00", game: "我不是RO大盜" },
+        { time: "12:30", game: "燙手山芋" },
+        { time: "13:00", game: "RO大盜" },
+        { time: "13:30", game: "魔物大戰" },
+        { time: "13:45", game: "波利賽跑" },
+        { time: "14:00", game: "我不是RO大盜" },
+        { time: "14:30", game: "極速快感" },
+        { time: "15:00", game: "RO大盜" },
+        { time: "15:10", game: "超速搶答" },
+        { time: "15:30", game: "炸彈波利" },
+        { time: "16:00", game: "我不是RO大盜" },
+        { time: "16:30", game: "燙手山芋" },
+        { time: "17:00", game: "RO大盜" },
+        { time: "17:30", game: "魔物大戰" },
+        { time: "18:00", game: "我不是RO大盜" },
+        { time: "18:30", game: "極速快感" },
+        { time: "19:00", game: "RO大盜" },
+        { time: "19:30", game: "炸彈波利" },
+        { time: "20:00", game: "我不是RO大盜" },
+        { time: "20:30", game: "燙手山芋" },
+        { time: "21:00", game: "RO大盜" },
+        { time: "21:10", game: "超速搶答" },
+        { time: "21:30", game: "魔物大戰" },
+        { time: "21:45", game: "波利賽跑" },
+        { time: "22:00", game: "我不是RO大盜" },
+        { time: "22:30", game: "極速快感" },
+        { time: "23:00", game: "RO大盜" },
+        { time: "23:30", game: "炸彈波利" }
+    ];
+
+    const scheduleTable = document.getElementById('schedule-table');
+    const nextGameElement = document.getElementById('next-game');
+    const countdownElement = document.getElementById('countdown');
+
+    function updateScheduleTable() {
+        schedule.forEach((entry) => {
+            const row = document.createElement('tr');
+            const timeCell = document.createElement('td');
+            const gameCell = document.createElement('td');
+            timeCell.textContent = entry.time;
+            gameCell.textContent = entry.game;
+            row.appendChild(timeCell);
+            row.appendChild(gameCell);
+            scheduleTable.appendChild(row);
+        });
+    }
+
+    function getNextGameIndex() {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+
+        for (let i = 0; i < schedule.length; i++) {
+            const [hours, minutes] = schedule[i].time.split(':').map(Number);
+            const gameTime = hours * 60 + minutes;
+
+            if (gameTime > currentTime) {
+                return i;
+            }
+        }
+
+        return null; // 如果已經是最後一場遊戲
+    }
+
+    function moveCompletedGames() {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        const rows = Array.from(scheduleTable.getElementsByTagName('tr'));
+
+        rows.forEach(row => {
+            const [hours, minutes] = row.cells[0].textContent.split(':').map(Number);
+            const gameTime = hours * 60 + minutes;
+
+            if (gameTime <= currentTime) {
+                scheduleTable.appendChild(row);
+            }
+        });
+    }
+
+    function highlightNextGame() {
+        const nextGameIndex = getNextGameIndex();
+        const rows = Array.from(scheduleTable.getElementsByTagName('tr'));
+
+        rows.forEach((row, index) => {
+            row.classList.remove('highlight');
+            if (index === nextGameIndex) {
+                row.classList.add('highlight');
+            }
+        });
+
+        if (nextGameIndex !== null) {
+            nextGameElement.textContent = `${schedule[nextGameIndex].time} - ${schedule[nextGameIndex].game}`;
+        } else {
+            nextGameElement.textContent = "今天的遊戲結束了！";
+        }
+    }
+
+    function updateCountdown() {
+        const nextGameIndex = getNextGameIndex();
+        if (nextGameIndex !== null) {
+            const [hours, minutes] = schedule[nextGameIndex].time.split(':').map(Number);
+            const now = new Date();
+            const nextGameTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+            const timeDiff = nextGameTime - now;
+
+            const hoursLeft = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutesLeft = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            const secondsLeft = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+            countdownElement.textContent = `${hoursLeft}小時 ${minutesLeft}分 ${secondsLeft}秒`;
+
+            if (timeDiff <= 0) {
+                updateScheduleTable();
+                moveCompletedGames();
+                highlightNextGame();
+                updateCountdown();
+            } else {
+                setTimeout(updateCountdown, 1000);
+            }
+        } else {
+            countdownElement.textContent = "";
+        }
+    }
+
+    updateScheduleTable();
+    moveCompletedGames();
+    highlightNextGame();
+    updateCountdown();
+</script>
+
+</body>
+</html>
